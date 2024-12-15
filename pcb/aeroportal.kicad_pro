@@ -85,9 +85,11 @@
         "lib_footprint_mismatch": "warning",
         "malformed_courtyard": "error",
         "microvia_drill_out_of_range": "error",
+        "mirrored_text_on_front_layer": "warning",
         "missing_courtyard": "ignore",
         "missing_footprint": "warning",
         "net_conflict": "warning",
+        "nonmirrored_text_on_back_layer": "warning",
         "npth_inside_courtyard": "ignore",
         "padstack": "warning",
         "pth_inside_courtyard": "ignore",
@@ -447,7 +449,7 @@
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "weathertastic.kicad_pro",
+    "filename": "aeroportal.kicad_pro",
     "version": 2
   },
   "net_settings": {
@@ -486,7 +488,7 @@
       "plot": "",
       "pos_files": "",
       "specctra_dsn": "",
-      "step": "",
+      "step": "../cad/components/aeroportal.step",
       "svg": "",
       "vrml": ""
     },
