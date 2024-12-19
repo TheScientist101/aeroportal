@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchWeatherApi } from "openmeteo";
 import { Card, CardBody, CardHeader } from "@nextui-org/card";
 import Image from "next/image";
 import axios from "axios";
@@ -12,18 +11,9 @@ type WeatherData = {
     temperature2m: number | undefined;
     relativeHumidity2m: number | undefined;
     apparentTemperature: number | undefined;
-    isDay: number | undefined;
-    precipitation: number | undefined;
-    rain: number | undefined;
-    showers: number | undefined;
-    snowfall: number | undefined;
     weatherCode: number | undefined;
-    cloudCover: number | undefined;
-    pressureMsl: number | undefined;
-    surfacePressure: number | undefined;
     windSpeed10m: number | undefined;
     windDirection10m: number | undefined;
-    windGusts10m: number | undefined;
   };
   hourly: {
     time: Date[];
@@ -81,84 +71,43 @@ export default function Home() {
     const params = {
       latitude: position[0],
       longitude: position[1],
-      current: [
-        "temperature_2m",
-        "relative_humidity_2m",
-        "apparent_temperature",
-        "is_day",
-        "precipitation",
-        "rain",
-        "showers",
-        "snowfall",
-        "weather_code",
-        "cloud_cover",
-        "pressure_msl",
-        "surface_pressure",
-        "wind_speed_10m",
-        "wind_direction_10m",
-        "wind_gusts_10m",
-      ],
-      hourly: ["temperature_2m", "precipitation_probability"],
+      current:
+        "temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m",
+      hourly: "temperature_2m,precipitation_probability",
       daily: "precipitation_probability_max",
       temperature_unit: "fahrenheit",
+      timeformat: "unixtime",
       wind_speed_unit: "mph",
       precipitation_unit: "inch",
       timezone: "GMT",
       forecast_hours: 24,
     };
+
     const url = "https://api.open-meteo.com/v1/forecast";
-    const responses = await fetchWeatherApi(url, params);
 
-    // Helper function to form time ranges
-    const range = (start: number, stop: number, step: number) =>
-      Array.from({ length: (stop - start) / step }, (_, i) => start + i * step);
+    const response = await axios.get(url, { params }).then((response) => response.data);
+    const current = response.current;
+    const hourly = response.hourly;
+    const daily = response.daily;
 
-    // Process first location. Add a for-loop for multiple locations or weather models
-    const response = responses[0];
-
-    // Attributes for timezone and location
-    const utcOffsetSeconds = response.utcOffsetSeconds();
-
-    const current = response.current()!;
-    const hourly = response.hourly()!;
-    const daily = response.daily()!;
-
-    // Note: The order of weather variables in the URL query and the indices below need to match!
     const weatherData = {
       current: {
-        time: new Date((Number(current.time()) + utcOffsetSeconds) * 1000),
-        temperature2m: current.variables(0)!.value(),
-        relativeHumidity2m: current.variables(1)!.value(),
-        apparentTemperature: current.variables(2)!.value(),
-        isDay: current.variables(3)!.value(),
-        precipitation: current.variables(4)!.value(),
-        rain: current.variables(5)!.value(),
-        showers: current.variables(6)!.value(),
-        snowfall: current.variables(7)!.value(),
-        weatherCode: current.variables(8)!.value(),
-        cloudCover: current.variables(9)!.value(),
-        pressureMsl: current.variables(10)!.value(),
-        surfacePressure: current.variables(11)!.value(),
-        windSpeed10m: current.variables(12)!.value(),
-        windDirection10m: current.variables(13)!.value(),
-        windGusts10m: current.variables(14)!.value(),
+        time: new Date(current.time * 1000),
+        temperature2m: current.temperature_2m,
+        relativeHumidity2m: current.relative_humidity_2m,
+        apparentTemperature: current.apparent_temperature,
+        weatherCode: current.weather_code,
+        windSpeed10m: current.wind_speed_10m,
+        windDirection10m: current.wind_direction_10m,
       },
       hourly: {
-        time: range(
-          Number(hourly.time()),
-          Number(hourly.timeEnd()),
-          hourly.interval(),
-        ).map((t) => new Date((t + utcOffsetSeconds) * 1000)),
-        temperature2m: hourly.variables(0)!.valuesArray()!,
-        precipitationProbability: hourly.variables(1)!.valuesArray()!,
+        time: hourly.time.map((t: number) => new Date(t * 1000)),
+        temperature2m: hourly.temperature_2m,
+        precipitationProbability: hourly.precipitation_probability,
       },
       daily: {
-        time: range(
-          Number(daily.time()),
-          Number(daily.timeEnd()),
-          daily.interval(),
-        ).map((t) => new Date((t + utcOffsetSeconds) * 1000)),
-        precipitationProbabilityMax: daily.variables(0)!.valuesArray()!,
+        time: daily.time.map((t: number) => new Date(t * 1000)),
+        precipitationProbabilityMax: daily.precipitation_probability_max,
       },
     };
 
@@ -170,17 +119,13 @@ export default function Home() {
   }, [position]);
 
   useEffect(() => {
-    console.log(weather);
-  }, [weather]);
-
-  useEffect(() => {
     navigator.geolocation.getCurrentPosition((position) => {
       setPosition([position.coords.latitude, position.coords.longitude]);
     });
 
     const intervalID = setInterval(() => {
       fetchWeather();
-    }, 3000);
+    }, 10000);
 
     axios
       .get("https://api.quotable.io/quotes/random?maxLength=100")
@@ -294,7 +239,6 @@ export default function Home() {
 
   // rotates around 100 100
   const rotateNeedle = (degrees: number) => {
-    degrees = 90 + degrees;
     // <polygon points="100,50 110,100 100,100 90,100" fill="red" />
     let points = [[100, 50], [110, 100], [100, 100], [90, 100]];
     let angle = degrees * (Math.PI / 180);
