@@ -5,22 +5,23 @@ import { TimeInput, TimeInputValue } from "@nextui-org/date-input";
 import { parseTime, Time } from "@internationalized/date";
 import { useEffect, useState } from "react";
 import { Input } from "@nextui-org/input";
+import { PressEvent } from "@react-types/shared";
 
 import { title } from "@/components/primitives";
-import { PressEvent } from "@react-types/shared";
 
 export default function SettingsPage() {
   const [currentAlarm, setCurrentAlarm] = useState<TimeInputValue | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [alarms, setAlarms] = useState(
-    localStorage.getItem("alarms")
+    typeof window !== "undefined" && localStorage.getItem("alarms")
       ? JSON.parse(localStorage.getItem("alarms")!)
       : [],
   );
   const [broadcast, setBroadcast] = useState<string>("");
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
     localStorage.setItem("alarms", JSON.stringify(alarms));
   }, [alarms]);
 
@@ -137,7 +138,9 @@ export default function SettingsPage() {
                     className="ml-2 bg-red-500"
                     size="sm"
                     onPress={() => {
-                      setAlarms(alarms.filter((_, i) => i !== index));
+                      setAlarms(
+                        alarms.filter((_: Time, i: number) => i !== index),
+                      );
                     }}
                   >
                     Delete
@@ -150,7 +153,12 @@ export default function SettingsPage() {
         <div>
           <h2 className="text-lg font-semibold">Broadcast a Message</h2>
           <form className="flex flex-row gap-2">
-            <Input placeholder="Message" id="message_input" value={broadcast} onValueChange={setBroadcast} />
+            <Input
+              id="message_input"
+              placeholder="Message"
+              value={broadcast}
+              onValueChange={setBroadcast}
+            />
             <Button onPress={sendMessage}>Send</Button>
           </form>
         </div>

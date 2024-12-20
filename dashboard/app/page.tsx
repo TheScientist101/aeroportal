@@ -115,6 +115,8 @@ export default function Home() {
   };
 
   useEffect(() => {
+    fetchWeather();
+
     const interval = setInterval(() => {
       fetchWeather();
     }, 10000);
