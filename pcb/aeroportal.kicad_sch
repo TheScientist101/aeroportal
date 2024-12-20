@@ -1616,6 +1616,28 @@
 			)
 		)
 	)
+	(global_label "LRC"
+		(shape input)
+		(at 106.68 62.23 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "8f860b3a-32e4-4ae1-a9ca-7696e603eed8")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 113.2333 62.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+	)
 	(global_label "CS"
 		(shape input)
 		(at 106.68 67.31 0)

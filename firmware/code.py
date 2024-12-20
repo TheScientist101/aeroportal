@@ -3,12 +3,16 @@ import board
 import displayio
 from adafruit_st7735 import ST7735
 from adafruit_display_text import label
-from adafruit_datetime import datetime, date, time
+from adafruit_datetime import datetime, time
+from adafruit_httpserver import Server, Request, Response, POST
+import audioio
+import audiomp3
 import terminalio
 import adafruit_requests as requests
 import wifi
 import socketpool
 import ssl
+import ipaddress
 
 alarms = [
     datetime.time(7, 0),
@@ -17,12 +21,17 @@ alarms = [
 # Initialize RTC
 rtc = board.RTC()
 
+# Speaker Stuff
+alarm = audiomp3.MP3Decoder("alarm.mp3")
+speaker = audioio.I2SOut(bit_clock=board.D2, word_select=board.D3, data=board.D8)
+
 # Initialize display
 spi = board.SPI()
-tft_cs = board.D5
-tft_dc = board.D6
+tft_cs = board.D10
+tft_dc = board.D5
+tft_reset = board.D4
 displayio.release_displays()
-display_bus = displayio.FourWire(spi, command=tft_dc, chip_select=tft_cs, reset=board.D9)
+display_bus = displayio.FourWire(spi, command=tft_dc, chip_select=tft_cs, reset=tft_reset)
 display = ST7735(display_bus, width=128, height=128)
 
 # Create the display context
@@ -65,6 +74,11 @@ def synchronize_time():
     except Exception as e:
         print(f"Error synchronizing time: {e}")
 
+ipv4 =  ipaddress.IPv4Address("10.0.0.69")
+netmask =  ipaddress.IPv4Address("255.255.255.0")
+gateway =  ipaddress.IPv4Address("10.0.0.1")
+wifi.radio.set_ipv4_address(ipv4=ipv4,netmask=netmask,gateway=gateway)
+
 # Connect to WiFi
 print("Connecting to WiFi...")
 wifi.radio.connect(WIFI_SSID, WIFI_PASSWORD)
@@ -82,6 +96,30 @@ URL = f"https://api.open-meteo.com/v1/forecast?latitude={LAT}&longitude={LON}&cu
 pool = socketpool.SocketPool(wifi.radio)
 https = requests.Session(pool, ssl.create_default_context())
 
+# Create server
+server = Server()
+
+@server.route("/alarm", methods=[POST])
+def set_alarm(request):
+    global alarms
+    data = request.json()
+    alarm_time = datetime.time(data['hour'], data['minute'])
+    alarms.append(alarm_time)
+    return Response(text="Alarm set!")
+
+@server.route("/playmp3", methods=[POST])
+def play_mp3(request):
+    # write mp3 data to a file
+    name = time.localtime() + ".mp3"
+    mp3_file = open(name, "wb")
+    mp3_file.write(request.body)
+    mp3_file.close()
+
+    # play the mp3 file
+    mp3 = audiomp3.MP3Decoder(name)
+    speaker.play(mp3)
+    return Response(text="MP3 played!")
+
 def fetch_weather():
     try:
         response = https.get(URL)
@@ -94,14 +132,35 @@ def fetch_weather():
         print(f"Error fetching weather: {e}")
         return "N/A"
 
+last_time = time.monotonic()
+
 def update_display():
+    global last_time
     current_time = time.localtime()
     time_label.text = time.strftime("%H:%M:%S", current_time)
 
-    weather_info = fetch_weather()
-    weather_label.text = weather_info
+    if (time.monotonic() - last_time) - 8 >= 0:
+        weather_info = fetch_weather()
+        weather_label.text = weather_info
+        last_time = time.monotonic()
 
-# Main loop
+# Start server
+try:
+    server.start(str(wifi.radio.ipv4_address), 80)
+    print("Server started!")
+except OSError:
+    print(f"Error starting server: {e}")
+
 while True:
-    update_display()
-    time.sleep(60)
+    try:
+        update_display()
+
+        for alarm in alarms:
+            if datetime.now().time() >= alarm:
+                speaker.play(alarm)
+                alarms.remove(alarm)
+        server.poll()
+    except Exception as e:
+        print(f"Error: {e}")
+    
+    time.sleep(0.20)
