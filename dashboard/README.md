@@ -1,8 +1,6 @@
-# Next.js & NextUI Template
+# Aeroportal Dashboard
 
-This is a template for creating applications using Next.js 14 (app directory) and NextUI (v2).
-
-[Try it on CodeSandbox](https://githubbox.com/nextui-org/next-app-template)
+This is a webpage portal for viewing weather information in your area (powered by Open-Meteo) and for managing your physical Aeroportal with features such as scheduling alarms and broadcasting messages on your Aeroportal (useful if your friends urgently need to tell you something). Though the current management features are purely visual, once I get my PCB fabricated and my ESP32 programmed, I will update this repository with any necesesary changes.
 
 ## Technologies Used
 
@@ -14,15 +12,7 @@ This is a template for creating applications using Next.js 14 (app directory) an
 - [Framer Motion](https://www.framer.com/motion/)
 - [next-themes](https://github.com/pacocoursey/next-themes)
 
-## How to Use
-
-### Use the template with create-next-app
-
-To create a new project based on this template using `create-next-app`, run the following command:
-
-```bash
-npx create-next-app -e https://github.com/nextui-org/next-app-template
-```
+## How to Run
 
 ### Install dependencies
 
