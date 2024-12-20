@@ -85,7 +85,9 @@ export default function Home() {
 
     const url = "https://api.open-meteo.com/v1/forecast";
 
-    const response = await axios.get(url, { params }).then((response) => response.data);
+    const response = await axios
+      .get(url, { params })
+      .then((response) => response.data);
     const current = response.current;
     const hourly = response.hourly;
     const daily = response.daily;
@@ -140,7 +142,9 @@ export default function Home() {
     <Card className="col-span-2 bg-gradient-to-bl from-gray-600 to-gray-300 h-full w-full aspect-[2/1] md:aspect-[3/1]">
       <CardBody className="flex-1 items-center justify-center gap-2">
         {weather == undefined ? (
-          <p className="text-4xl font-bold text-content1-foreground">Loading...</p>
+          <p className="text-4xl font-bold text-content1-foreground">
+            Loading...
+          </p>
         ) : (
           <div className="flex justify-between w-11/12 text-right">
             {weatherImage(weather.current.weatherCode!)}
@@ -180,29 +184,34 @@ export default function Home() {
       </CardHeader>
       <CardBody className="flex-1 items-center justify-evenly w-full">
         <div className={`flex justify-between h-[95%] w-[92%]`}>
-          {Array.from(weather?.hourly.precipitationProbability || [])
-            .map((element: number, index: number) => (
+          {Array.from(weather?.hourly.precipitationProbability || []).map(
+            (element: number, index: number) => (
               <div key={index} className="flex flex-col h-full w-2 mx-0">
                 <div
                   className="w-full"
-                  style={{ height: `${100 - (element + 5) / 105 * 100}%` }}
+                  style={{ height: `${100 - ((element + 5) / 105) * 100}%` }}
                 />
                 <div
                   className="bg-gradient-to-tr from-blue-300 to-blue-700 w-full mt-auto rounded-lg"
-                  style={{ height: `${(element + 5) / 105 * 100}%` }}
+                  style={{ height: `${((element + 5) / 105) * 100}%` }}
                 />
-                {index === 0 || index === weather?.hourly.precipitationProbability.length - 1 ? (
-                  <p className={`text-xs text-gray-600 absolute bottom-0 ${index === 0 ? "left-3" : "right-3"}`}>
+                {index === 0 ||
+                  index ===
+                  (weather?.hourly.precipitationProbability.length ?? 0) - 1 ? (
+                  <p
+                    className={`text-xs text-gray-600 absolute bottom-0 ${index === 0 ? "left-3" : "right-3"}`}
+                  >
                     {weather?.hourly.time[index].toLocaleTimeString("en-US", {
                       hour: "numeric",
                     })}
                   </p>
                 ) : null}
               </div>
-            ))}
+            ),
+          )}
         </div>
       </CardBody>
-    </Card >
+    </Card>
   );
 
   const TimeCard = () => (
@@ -234,13 +243,18 @@ export default function Home() {
           </p>
         </div>
       </CardBody>
-    </Card >
+    </Card>
   );
 
   // rotates around 100 100
   const rotateNeedle = (degrees: number) => {
     // <polygon points="100,50 110,100 100,100 90,100" fill="red" />
-    let points = [[100, 50], [110, 100], [100, 100], [90, 100]];
+    let points = [
+      [100, 50],
+      [110, 100],
+      [100, 100],
+      [90, 100],
+    ];
     let angle = degrees * (Math.PI / 180);
     let cos = Math.cos(angle);
     let sin = Math.sin(angle);
@@ -260,7 +274,7 @@ export default function Home() {
         points={newPoints.map((point) => point.join(",")).join(" ")}
       />
     );
-  }
+  };
 
   const CompassCard = () => (
     <Card className="col-span-1 bg-gradient-to-bl from-gray-600 to-gray-300 p-0 aspect-square h-full w-full">
@@ -270,16 +284,49 @@ export default function Home() {
         </h1>
       </CardHeader>
       <CardBody className="h-full w-full items-center justify-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" className="h-full w-full">
-          <circle cx="100" cy="100" r="95" stroke="black" strokeWidth="2" fill="none" />
-          <text x="100" y="20" fontSize="16" textAnchor="middle" fill="black">N</text>
-          <text x="100" y="190" fontSize="16" textAnchor="middle" fill="black">S</text>
-          <text x="20" y="105" fontSize="16" textAnchor="middle" fill="black">W</text>
-          <text x="180" y="105" fontSize="16" textAnchor="middle" fill="black">E</text>
+        <svg
+          className="h-full w-full"
+          viewBox="0 0 200 200"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle
+            cx="100"
+            cy="100"
+            fill="none"
+            r="95"
+            stroke="black"
+            strokeWidth="2"
+          />
+          <text fill="black" fontSize="16" textAnchor="middle" x="100" y="20">
+            N
+          </text>
+          <text fill="black" fontSize="16" textAnchor="middle" x="100" y="190">
+            S
+          </text>
+          <text fill="black" fontSize="16" textAnchor="middle" x="20" y="105">
+            W
+          </text>
+          <text fill="black" fontSize="16" textAnchor="middle" x="180" y="105">
+            E
+          </text>
           {rotateNeedle(weather?.current.windDirection10m ?? 0)}
-          <circle cx="100" cy="100" r="5" fill="black" />
-          <circle cx="100" cy="100" r="80" stroke="black" strokeWidth="1" fill="none" />
-          <circle cx="100" cy="100" r="60" stroke="black" strokeWidth="1" fill="none" />
+          <circle cx="100" cy="100" fill="black" r="5" />
+          <circle
+            cx="100"
+            cy="100"
+            fill="none"
+            r="80"
+            stroke="black"
+            strokeWidth="1"
+          />
+          <circle
+            cx="100"
+            cy="100"
+            fill="none"
+            r="60"
+            stroke="black"
+            strokeWidth="1"
+          />
         </svg>
       </CardBody>
     </Card>
