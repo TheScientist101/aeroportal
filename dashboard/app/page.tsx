@@ -28,9 +28,7 @@ type WeatherData = {
 
 export default function Home() {
   const [weather, setWeather] = useState<WeatherData | undefined>(undefined);
-  const [position, setPosition] = useState<[number, number]>([
-    37.7749, -122.4194,
-  ]);
+  const [position, setPosition] = useState<number[]>([]);
   const [quote, setQuote] = useState("");
 
   const weatherImage = (weatherCode: number) => {
@@ -69,8 +67,8 @@ export default function Home() {
   // Using Open Meteo API
   const fetchWeather = async () => {
     const params = {
-      latitude: position[0],
-      longitude: position[1],
+      latitude: position[0] ?? 37.7749, // Default to San Francisco
+      longitude: position[1] ?? -122.4194,
       current:
         "temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m",
       hourly: "temperature_2m,precipitation_probability",
@@ -117,25 +115,23 @@ export default function Home() {
   };
 
   useEffect(() => {
-    fetchWeather();
+    const interval = setInterval(() => {
+      fetchWeather();
+    }, 10000);
+
+    return () => clearInterval(interval);
   }, [position]);
 
   useEffect(() => {
-    navigator.geolocation.getCurrentPosition((position) => {
-      setPosition([position.coords.latitude, position.coords.longitude]);
+    navigator.geolocation.getCurrentPosition((location) => {
+      setPosition(() => [location.coords.latitude, location.coords.longitude]);
     });
-
-    const intervalID = setInterval(() => {
-      fetchWeather();
-    }, 10000);
 
     axios
       .get("https://api.quotable.io/quotes/random?maxLength=100")
       .then((response) => {
         setQuote(`${response.data[0].content}\n—${response.data[0].author}`);
       });
-
-    return () => clearInterval(intervalID);
   }, []);
 
   const WeatherCard = () => (

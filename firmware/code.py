@@ -99,13 +99,17 @@ https = requests.Session(pool, ssl.create_default_context())
 # Create server
 server = Server()
 
-@server.route("/alarm", methods=[POST])
+@server.route("/set-alarm", methods=[POST])
 def set_alarm(request):
     global alarms
     data = request.json()
     alarm_time = datetime.time(data['hour'], data['minute'])
     alarms.append(alarm_time)
     return Response(text="Alarm set!")
+
+@server.route("/get-alarms", methods=[GET])
+def get_alarms(request):
+    return Response(json=alarms)
 
 @server.route("/playmp3", methods=[POST])
 def play_mp3(request):
